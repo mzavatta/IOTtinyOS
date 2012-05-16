@@ -15,13 +15,14 @@ implementation {
   /* main, leds and timer components. */
   components MainC, LedsC;
   components wirelesslightsC;
+  components new TimerMilliC();
 
   /* message passing components. */
   components new AMSenderC(AM_MY_MSG);
   components new AMReceiverC(AM_MY_MSG);
   components ActiveMessageC;
-  components new TimerMilliC();
-  components new FakeSensorC();
+  
+  //components new FakeSensorC();
 
   //Boot interface
   App.Boot -> MainC.Boot;

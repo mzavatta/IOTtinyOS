@@ -7,6 +7,7 @@
 
 typedef nx_struct my_msg_t {
 	nx_uint8_t msg_type;
+	nx_uint8_t msg_senderid;
 	nx_uint8_t msg_value;
 } my_msg_t;
 

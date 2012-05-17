@@ -1,0 +1,66 @@
+tinyos@tinyos-VirtualBox:~/IOTHomeworks/IOTtinyOS$ python wirelesslightsTOSSIM.py 
+********************************************
+*        wirelesslights TOSSIM script      *
+*       IOT 2012 Zavatta Marco 766437      *
+********************************************
+Initializing mac....
+Initializing radio channels....
+Initializing simulator....
+Using topology file:  topology.txt
+Activate debug message on channel cpanel
+Activate debug message on channel light1
+Activate debug message on channel light2
+Creating Control Panel (1)...
+>>>Will boot at time 0 [sec]
+Creating node Light1 (2)...
+>>>Will boot at time 0 [sec]
+Creating node Light2 (3)...
+>>>Will boot at time 0 [sec]
+Creating radio channels...
+>>>Setting radio channel from node  1  to node  2  with gain  -10.0  dBm
+>>>Setting radio channel from node  2  to node  1  with gain  -10.0  dBm
+>>>Setting radio channel from node  1  to node  3  with gain  -10.0  dBm
+>>>Setting radio channel from node  3  to node  1  with gain  -10.0  dBm
+>>>Setting radio channel from node  3  to node  2  with gain  -10.0  dBm
+>>>Setting radio channel from node  2  to node  3  with gain  -10.0  dBm
+Creating noise model for  1
+Creating noise model for  2
+Creating noise model for  3
+Start simulation with TOSSIM! 
+
+
+
+DEBUG (1): Control Panel booted!
+DEBUG (3): Light2 booted!
+DEBUG (2): Light1 booted!
+DEBUG (3): Light2 timeouts set
+DEBUG (1): Control panel timeouts set
+DEBUG (2): Light1 timeouts set
+DEBUG (1): 5 seconds
+DEBUG (1): Sending packet from Control Panel to Light1: turn ON
+DEBUG (2): Received Light1 turned ON by 1
+DEBUG (1): Packet sent by Control Panel
+DEBUG (2): 10 seconds (from Sensor1)
+DEBUG (2): Sending packet from Light1 to Control Panel: detected entrance
+DEBUG (1): Received person entered notice by Light1
+DEBUG (2): Packet sent by Light1
+DEBUG (2): 30 seconds
+DEBUG (2): Sending packet from Light1 to Light2: turn ON
+DEBUG (3): Received Light2 turned ON by 2
+DEBUG (2): Packet sent by Light1
+DEBUG (3): 60 seconds (from Sensor2)
+DEBUG (3): Sending packet from Light2 to Control Panel: detected exit
+DEBUG (1): Received person exit notice by Light2
+DEBUG (3): Packet sent by Light2
+DEBUG (1): 90 seconds
+DEBUG (1): Sending packet from Control Panel to Light1: turn OFF
+DEBUG (2): Received Light1 turned OFF by 1
+DEBUG (1): Packet sent by Control Panel
+DEBUG (1): Sending packet from Control Panel to Light2: turn OFF
+DEBUG (3): Received Light2 turned OFF by 1
+DEBUG (1): Packet sent by Control Panel
+
+
+
+Simulation finished!
+tinyos@tinyos-VirtualBox:~/IOTHomeworks/IOTtinyOS$ 

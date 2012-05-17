@@ -20,19 +20,23 @@
 		nx_uint8_t msg_value;
 	} my_msg_t;
 
+	/* Message types. */
 	#define CONTROL (1)
 	#define INFO 	(2)
 
+	/* Message values. */
 	#define	LON 	(1)
 	#define LOFF	(2)
 
 	#define ENTRY	(1)
 	#define EXIT	(2)
 
+	/* Node addresses. */
 	#define CPANEL	(1)
 	#define LIGHT1	(2)
 	#define LIGHT2	(3)
 
+	/* mSec delays. */
 	#define SEC5	(5000)
 	#define SEC10	(10000)
 	#define SEC30	(30000)

@@ -8,6 +8,16 @@
 #include "wirelesslights.h"
 #include "Timer.h"
 
+/**
+ * The same component will be loaded on the three devices.
+ * Their behavior is diversified based on TOS_NODE_ID.
+ * Device		TOS_NODE_ID
+ * Control Panel	1
+ * Light1		2
+ * Light2		3
+ * Sensor events are signalled by one-shot timers expiry.
+ */
+
 module wirelesslightsC {
 
    uses {
@@ -23,6 +33,8 @@ module wirelesslightsC {
       	interface AMSend;
       	interface SplitControl as AMControl;
       	interface Receive;
+	interface Read<uint16_t> as Sensor1;
+	interface Read<uint16_t> as Sensor2;
    }
 }
 
@@ -48,18 +60,20 @@ implementation {
 
    //****************** Boot interface ************************//
    event void Boot.booted() {
-
-	dbg("radio_send", "BOOTED!!\n");
 	
      	/* Light 1. */
 	if (TOS_NODE_ID==LIGHT1) {
+		dbg("light1", "Light1 booted!\n");	
 		call Leds.led0Off();
 	}
 
 	/* Light 2. */
-	if (TOS_NODE_ID==LIGHT2) {
+	else if (TOS_NODE_ID==LIGHT2) {
+		dbg("light2", "Light2 booted!\n");	
 		call Leds.led0Off();
 	}
+
+	else dbg("cpanel", "Control Panel booted!\n");
 
 	call AMControl.start();
    }
@@ -72,20 +86,21 @@ implementation {
 	if (TOS_NODE_ID==CPANEL) {
       		call Timer1.startOneShot(SEC5);
 		call Timer2.startOneShot(SEC90);
-		dbg("radio_send", "Control panel timeouts set\n");
+		dbg("cpanel", "Control panel timeouts set\n");
 	}
 	
 	/* Light 1. */
 	else if (TOS_NODE_ID==LIGHT1) {
-		call Timer1.startOneShot(SEC10);
+		//call Timer1.startOneShot(SEC10);
+		call Sensor1.read();
 		call Timer2.startOneShot(SEC30);
-		dbg("radio_send", "Light1 timeouts set\n");
+		dbg("light1", "Light1 timeouts set\n");
 	}
 
 	/* Light 2. */
 	else if (TOS_NODE_ID==LIGHT2) {
-		call Timer1.startOneShot(SEC60);
-		dbg("radio_send", "Light2 timeouts set\n");
+		call Sensor2.read();
+		dbg("light2", "Light2 timeouts set\n");
 	}
 	
      }
@@ -102,20 +117,16 @@ implementation {
 
         /* Control panel. */
 	if (TOS_NODE_ID==CPANEL) {
-		dbg("radio_send", "5 seconds\n");
+		dbg("cpanel", "5 seconds\n");
       		post sendL1On();
 	}
 	
 	/* Light 1. */
 	else if (TOS_NODE_ID==LIGHT1) {
-		dbg("radio_send", "10 seconds\n");
-		post sendEntry();
 	}
 
 	/* Light 2. */
 	else if (TOS_NODE_ID==LIGHT2) {
-		dbg("radio_send", "60 seconds\n");
-		post sendExit();
 	}
 
    }
@@ -125,12 +136,12 @@ implementation {
 
         /* Control panel. */
 	if (TOS_NODE_ID==CPANEL) {
-		dbg("radio_send", "90 seconds\n");
+		dbg("cpanel", "90 seconds\n");
 		
 		/* Need to send two packets, though I cannot post the second task
 		 * untill after AMSend.sendDone() of the first one has been called.
 		 * The second task is therefore posted into AMSend.sendDone() and this
-		 * fact is adverised by the value of p.
+		 * fact is adverised by the p flag.
 		 */
 		p=2;
 
@@ -140,22 +151,35 @@ implementation {
 	
 	/* Light 1. */
 	else if (TOS_NODE_ID==LIGHT1) {
-		dbg("radio_send", "30 seconds\n");
+		dbg("light1", "30 seconds\n");
 		post sendL2On();
 	}
 
 	/* Light 2. */
 	else if (TOS_NODE_ID==LIGHT2) {
-		
 	}
 
-   }      
+   }
+
+   //************************* Sensor1 interface **********************//
+   event void Sensor1.readDone(error_t result, uint16_t data) {
+		dbg("light1", "10 seconds (from Sensor1)\n");
+		post sendEntry();
+   }
+
+   //************************* Sensor2 interface **********************//
+   event void Sensor2.readDone(error_t result, uint16_t data) {
+		dbg("light2", "60 seconds (from Sensor2)\n");
+		post sendExit();
+   }
 
    //********************* AMSend interface ****************//
    event void AMSend.sendDone(message_t* buf,error_t err) {
 
 	    if(&packet == buf && err == SUCCESS ) {
-		dbg("radio_send", "Packet sent by %d\n", TOS_NODE_ID);
+		if (TOS_NODE_ID==CPANEL) dbg("cpanel", "Packet sent by Control Panel\n");
+		else if (TOS_NODE_ID==LIGHT1) dbg("light1", "Packet sent by Light1\n");
+		else if (TOS_NODE_ID==LIGHT2) dbg("light2", "Packet sent by Light2\n");
 	    }
 
 	    /* Refer to Timer2.fired() for an explanation of this task post. */	
@@ -179,15 +203,15 @@ implementation {
 		else if (mess->msg_type == INFO) {
 			if (mess->msg_value == ENTRY) {
 				if (mess->msg_senderid == LIGHT1)
-					dbg("control_panel","Received Person entered notice by Light1\n");
+					dbg("cpanel","Received person entered notice by Light1\n");
 				else if (mess->msg_senderid == LIGHT2)
-					dbg("control_panel","Received Person entered notice by Light2\n");
+					dbg("cpanel","Received person entered notice by Light2\n");
 				}
 			else if (mess->msg_value == EXIT) {
 				if (mess->msg_senderid == LIGHT1)
-					dbg("control_panel","Received Person exited notice by Light1\n");
+					dbg("cpanel","Received person exit notice by Light1\n");
 				else if (mess->msg_senderid == LIGHT2)
-					dbg("control_panel","Received Person exited notice by Light2\n");
+					dbg("cpanel","Received person exit notice by Light2\n");
 			}
 		}
 	
@@ -199,11 +223,11 @@ implementation {
 		if (mess->msg_type == CONTROL) {
 			if (mess->msg_value == LON) {
 				call Leds.led0On();
-				dbg("control_panel","Received Light1 turned ON by %d\n", mess->msg_senderid);
+				dbg("light1","Received Light1 turned ON by %d\n", mess->msg_senderid);
 			}
 			else if (mess->msg_value == LOFF) {
 				call Leds.led0Off();
-				dbg("control_panel","Received Light1 turned OFF by %d\n", mess->msg_senderid);
+				dbg("light1","Received Light1 turned OFF by %d\n", mess->msg_senderid);
 			}
 		}
 		
@@ -218,11 +242,11 @@ implementation {
 		if (mess->msg_type == CONTROL) {
 			if (mess->msg_value == LON) {
 				call Leds.led0On();
-				dbg("control_panel","Received Light2 turned ON by %d\n", mess->msg_senderid);
+				dbg("light2","Received Light2 turned ON by %d\n", mess->msg_senderid);
 			}
 			else if (mess->msg_value == LOFF) {
 				call Leds.led0Off();
-				dbg("control_panel","Received Light2 turned OFF by %d\n", mess->msg_senderid);
+				dbg("light2","Received Light2 turned OFF by %d\n", mess->msg_senderid);
 			}
 		}
 		
@@ -236,14 +260,15 @@ implementation {
    }
 
    //***************** Tasks  ****************************************//
-
    task void sendL1On() {
 	my_msg_t* mess = (my_msg_t*)call Packet.getPayload(&packet,sizeof(my_msg_t));
 	mess->msg_type = CONTROL;
 	mess->msg_senderid = TOS_NODE_ID;
 	mess->msg_value = LON;
 	if(call AMSend.send(LIGHT1, &packet, sizeof(my_msg_t)) == SUCCESS) {
-		dbg("radio_send", "Sending packet Light1 turned ON by %d\n", TOS_NODE_ID);
+		if (TOS_NODE_ID==CPANEL) dbg("cpanel", "Sending packet from Control Panel to Light1: turn ON\n");
+		else if (TOS_NODE_ID==LIGHT1) dbg("light1", "Sending packet from Light1 to Light1: turn ON\n");
+		else if (TOS_NODE_ID==LIGHT2) dbg("light2", "Sending packet from Light2 to Light1: turn ON\n");
 	}
    }
 
@@ -253,7 +278,9 @@ implementation {
 	mess->msg_senderid = TOS_NODE_ID;
 	mess->msg_value = LOFF;
 	if(call AMSend.send(LIGHT1, &packet, sizeof(my_msg_t)) == SUCCESS) {
-		dbg("radio_send", "Sending packet Light1 turned OFF by %d\n", TOS_NODE_ID);
+		if (TOS_NODE_ID==CPANEL) dbg("cpanel", "Sending packet from Control Panel to Light1: turn OFF\n");
+		else if (TOS_NODE_ID==LIGHT1) dbg("light1", "Sending packet from Light1 to Light1: turn OFF\n");
+		else if (TOS_NODE_ID==LIGHT2) dbg("light2", "Sending packet from Light2 to Light1: turn OFF\n");
 	}
    }
    
@@ -263,7 +290,9 @@ implementation {
 	mess->msg_senderid = TOS_NODE_ID;
 	mess->msg_value = LON;
 	if(call AMSend.send(LIGHT2, &packet, sizeof(my_msg_t)) == SUCCESS) {
-		dbg("radio_send", "Sending packet Light2 turned ON by %d\n", TOS_NODE_ID);
+		if (TOS_NODE_ID==CPANEL) dbg("cpanel", "Sending packet from Control Panel to Light2: turn ON\n");
+		else if (TOS_NODE_ID==LIGHT1) dbg("light1", "Sending packet from Light1 to Light2: turn ON\n");
+		else if (TOS_NODE_ID==LIGHT2) dbg("light2", "Sending packet from Light2 to Light2: turn ON\n");
 	}
    }
 
@@ -273,7 +302,9 @@ implementation {
 	mess->msg_senderid = TOS_NODE_ID;
 	mess->msg_value = LOFF;
 	if(call AMSend.send(LIGHT2, &packet, sizeof(my_msg_t)) == SUCCESS) {
-		dbg("radio_send", "Sending packet Light2 turned OFF by %d\n", TOS_NODE_ID);
+		if (TOS_NODE_ID==CPANEL) dbg("cpanel", "Sending packet from Control Panel to Light2: turn OFF\n");
+		else if (TOS_NODE_ID==LIGHT1) dbg("light1", "Sending packet from Light1 to Light2: turn OFF\n");
+		else if (TOS_NODE_ID==LIGHT2) dbg("light2", "Sending packet from Light2 to Light2: turn OFF\n");
 	}
    }
 
@@ -283,7 +314,9 @@ implementation {
 	mess->msg_senderid = TOS_NODE_ID;
 	mess->msg_value = ENTRY;
 	if(call AMSend.send(CPANEL, &packet, sizeof(my_msg_t)) == SUCCESS) {
-		dbg("radio_send", "Sending packet Detected entrance by %d\n", TOS_NODE_ID);
+		if (TOS_NODE_ID==CPANEL) dbg("cpanel", "Sending packet from Control Panel to Control Panel: detected entrance\n");
+		else if (TOS_NODE_ID==LIGHT1) dbg("light1", "Sending packet from Light1 to Control Panel: detected entrance\n");
+		else if (TOS_NODE_ID==LIGHT2) dbg("light2", "Sending packet from Light2 to Control Panel: detected entrance\n");
 	}
    }
 
@@ -293,7 +326,9 @@ implementation {
 	mess->msg_senderid = TOS_NODE_ID;
 	mess->msg_value = EXIT;
 	if(call AMSend.send(CPANEL, &packet, sizeof(my_msg_t)) == SUCCESS) {
-		dbg("radio_send", "Sending packet Detected exit by %d\n", TOS_NODE_ID);
+		if (TOS_NODE_ID==CPANEL) dbg("cpanel", "Sending packet from Control Panel to Control Panel: detected exit\n");
+		else if (TOS_NODE_ID==LIGHT1) dbg("light1", "Sending packet from Light1 to Control Panel: detected exit\n");
+		else if (TOS_NODE_ID==LIGHT2) dbg("light2", "Sending packet from Light2 to Control Panel: detected exit\n");
 	}
    }   
 

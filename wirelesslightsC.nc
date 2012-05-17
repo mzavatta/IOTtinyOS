@@ -29,7 +29,9 @@ module wirelesslightsC {
 implementation {
 
    message_t packet;
+   message_t packet2;
    uint8_t rec_id;
+   uint8_t p = 0;
 
    task void sendL1On();
    task void sendL1Off();
@@ -122,8 +124,9 @@ implementation {
         /* Control panel. */
 	if (TOS_NODE_ID==CPANEL) {
 		dbg("radio_send", "90 seconds\n");
-      		post sendL1Off();
-		post sendL2Off();
+		p=2;
+		post sendL1Off();    
+		
 	}
 	
 	/* Light 1. */
@@ -142,8 +145,13 @@ implementation {
    //********************* AMSend interface ****************//
    event void AMSend.sendDone(message_t* buf,error_t err) {
 
-	    if(&packet == buf && err == SUCCESS ) {
+	    if((&packet == buf || &packet2 == buf) && err == SUCCESS ) {
 		dbg("radio_send", "Packet sent by %d\n", TOS_NODE_ID);
+	    }
+
+	    if(p == 2) {
+		p=0;
+		post sendL2Off();
 	    }
    }
 
@@ -159,16 +167,17 @@ implementation {
 		}
 		
 		else if (mess->msg_type == INFO) {
-			if (mess->msg_value == ENTRY)
+			if (mess->msg_value == ENTRY) {
 				if (mess->msg_senderid == LIGHT1)
-					dbg("control_panel","Person entered notice by Light1\n");
+					dbg("control_panel","Received Person entered notice by Light1\n");
 				else if (mess->msg_senderid == LIGHT2)
-					dbg("control_panel","Person entered notice by Light2\n");
+					dbg("control_panel","Received Person entered notice by Light2\n");
+				}
 			else if (mess->msg_value == EXIT) {
 				if (mess->msg_senderid == LIGHT1)
-					dbg("control_panel","Person exited notice by Light1\n");
+					dbg("control_panel","Received Person exited notice by Light1\n");
 				else if (mess->msg_senderid == LIGHT2)
-					dbg("control_panel","Person exited notice by Light2\n");
+					dbg("control_panel","Received Person exited notice by Light2\n");
 			}
 		}
 	
@@ -180,11 +189,11 @@ implementation {
 		if (mess->msg_type == CONTROL) {
 			if (mess->msg_value == LON) {
 				call Leds.led0On();
-				dbg("control_panel","Light1 turned ON by %d\n", mess->msg_senderid);
+				dbg("control_panel","Received Light1 turned ON by %d\n", mess->msg_senderid);
 			}
 			else if (mess->msg_value == LOFF) {
 				call Leds.led0Off();
-				dbg("control_panel","Light1 turned OFF by %d\n", mess->msg_senderid);
+				dbg("control_panel","Received Light1 turned OFF by %d\n", mess->msg_senderid);
 			}
 		}
 		
@@ -199,11 +208,11 @@ implementation {
 		if (mess->msg_type == CONTROL) {
 			if (mess->msg_value == LON) {
 				call Leds.led0On();
-				dbg("control_panel","Light2 turned ON by %d\n", mess->msg_senderid);
+				dbg("control_panel","Received Light2 turned ON by %d\n", mess->msg_senderid);
 			}
 			else if (mess->msg_value == LOFF) {
 				call Leds.led0Off();
-				dbg("control_panel","Light2 turned OFF by %d\n", mess->msg_senderid);
+				dbg("control_panel","Received Light2 turned OFF by %d\n", mess->msg_senderid);
 			}
 		}
 		

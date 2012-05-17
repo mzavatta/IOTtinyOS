@@ -77,7 +77,7 @@ for i in range(1, 4):
 
 print "Start simulation with TOSSIM! \n\n\n";
 
-for i in range(0,10000000):
+for i in range(0,2000000):
 	t.runNextEvent()
 	
 print "\n\n\nSimulation finished!";

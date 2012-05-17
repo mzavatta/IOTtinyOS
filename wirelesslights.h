@@ -5,10 +5,15 @@
  * @brief IOT homework TinyOS: header file
  */
 
+/* Conditional compilation to avoid multiple inclusion. */
 #ifndef WIRELESSLIGHTS_H
 
 	#define WIRELESSLIGHTS_H
-
+	
+	/* msg_type: CONTROL, INFO
+	 * msg_senderid: sender's TOS_NODE_ID
+	 * msg_value: LOFF, LON, ENTRY, EXIT
+	 */
 	typedef nx_struct my_msg {
 		nx_uint8_t msg_type;
 		nx_uint8_t msg_senderid;

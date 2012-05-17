@@ -28,11 +28,13 @@ module wirelesslightsC {
 
 implementation {
 
+   /* Memory allocation for the packet structure. */
    message_t packet;
-   message_t packet2;
-   uint8_t rec_id;
+   
+   /* Refer to Timer2.fired() for an explanation of p's role. */
    uint8_t p = 0;
 
+   /* Tasks instantiations. */
    task void sendL1On();
    task void sendL1Off();
    task void sendL2On();
@@ -124,7 +126,14 @@ implementation {
         /* Control panel. */
 	if (TOS_NODE_ID==CPANEL) {
 		dbg("radio_send", "90 seconds\n");
+		
+		/* Need to send two packets, though I cannot post the second task
+		 * untill after AMSend.sendDone() of the first one has been called.
+		 * The second task is therefore posted into AMSend.sendDone() and this
+		 * fact is adverised by the value of p.
+		 */
 		p=2;
+
 		post sendL1Off();    
 		
 	}
@@ -145,10 +154,11 @@ implementation {
    //********************* AMSend interface ****************//
    event void AMSend.sendDone(message_t* buf,error_t err) {
 
-	    if((&packet == buf || &packet2 == buf) && err == SUCCESS ) {
+	    if(&packet == buf && err == SUCCESS ) {
 		dbg("radio_send", "Packet sent by %d\n", TOS_NODE_ID);
 	    }
 
+	    /* Refer to Timer2.fired() for an explanation of this task post. */	
 	    if(p == 2) {
 		p=0;
 		post sendL2Off();

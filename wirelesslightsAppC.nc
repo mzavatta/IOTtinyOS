@@ -12,38 +12,44 @@ configuration wirelesslightsAppC {
 
 implementation {
 
-  /* main, leds and timer components. */
-  components MainC, LedsC;
-  components wirelesslightsC;
-  components new TimerMilliC();
 
-  /* message passing components. */
-  components new AMSenderC(AM_MY_MSG);
-  components new AMReceiverC(AM_MY_MSG);
-  components ActiveMessageC;
-  
-  //components new FakeSensorC();
+	/******** Component Instantiations **************/
 
-  //Boot interface
-  App.Boot -> MainC.Boot;
+	/* Application component. */
+	components wirelesslightsC;
 
-  //Send and Receive interfaces
-  App.Receive -> AMReceiverC;
-  App.AMSend -> AMSenderC;
+	/* Main, leds and timer components. */
+	components MainC, LedsC;
+	components new TimerMilliC() as Timer1;
+	components new TimerMilliC() as TImer2;
 
-  //Radio Control
-  App.SplitControl -> ActiveMessageC;
+	/* Message passing components. */
+	components new AMSenderC(AM_MY_MSG);
+	components new AMReceiverC(AM_MY_MSG);
+	components ActiveMessageC;
 
-  //Interfaces to access package fields
-  App.AMPacket -> AMSenderC;
-  App.Packet -> AMSenderC;
-  App.PacketAcknowledgements->ActiveMessageC;
+	/******** Wirings *******************************/
+	//Boot interface
+	wirelesslightsC.Boot -> MainC.Boot;
 
-  //Timer interface
-  App.MilliTimer -> TimerMilliC;
+	//Leds interface
+	wirelesslightsC.Leds -> LedsC;
 
-  //Fake Sensor read
-  App.Read -> FakeSensorC;
+	//Send and Receive interfaces
+	wirelesslightsC.Receive -> AMReceiverC;
+	wirelesslightsC.AMSend -> AMSenderC;
+
+	//Radio Control
+	wirelesslightsC.AMControl-> ActiveMessageC;
+
+	//Interfaces to access package fields
+	wirelesslightsC.AMPacket -> AMSenderC;
+	wirelesslightsC.Packet -> AMSenderC;
+	wirelesslightsC.PacketAcknowledgements->ActiveMessageC;
+
+	//Timers interface
+	wirelesslightsC.Timer1 -> Timer1;
+	wirelesslightsC.Timer2 -> Timer2;
 
 }
 

@@ -1,0 +1,2 @@
+COMPONENT=wirelesslightsAppC
+include $(MAKERULES)

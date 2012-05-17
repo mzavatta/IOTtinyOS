@@ -5,7 +5,7 @@
  * @brief IOT homework TinyOS: module file
  */
 
-#include "sendAck.h"
+#include "wirelesslights.h"
 #include "Timer.h"
 
 module wirelesslightsC {
@@ -15,8 +15,8 @@ module wirelesslightsC {
       	interface Timer<TMilli> as Timer1;
       	interface Timer<TMilli> as Timer2;
 
+	interface Boot;
       	interface Leds;
-      	interface Boot;
       	interface AMPacket;
       	interface Packet;
       	interface PacketAcknowledgements;
@@ -38,16 +38,21 @@ implementation {
    task void sendEntry();
    task void sendExit();
 
+   /*
+    * No events provided by Packet, PacketAknowledgements, AMPacket
+    */
+
+   //****************** Boot interface ************************//
    event void Boot.booted() {
 
      	/* Light 1. */
 	if (TOS_NODE_ID==LIGHT1) {
-		//Turn off
+		Leds.led00ff();
 	}
 
 	/* Light 2. */
 	if (TOS_NODE_ID==LIGHT2) {
-		//Turn off
+		Leds.led00ff();
 	}
 
 	call AMControl.start();
@@ -80,7 +85,7 @@ implementation {
      }
    }
 
-   event void SplitControl.stopDone(error_t err) {
+   event void AMControl.stopDone(error_t err) {
    }
 
    //***************** Timer1 interface ********************//
@@ -127,20 +132,10 @@ implementation {
    //********************* AMSend interface ****************//
    event void AMSend.sendDone(message_t* buf,error_t err) {
 
-		/*
 	    if(&packet == buf && err == SUCCESS ) {
-		dbg("radio_send", "Packet sent...");
-
-		if ( call PacketAcknowledgements.wasAcked( buf ) ) {
-		  dbg_clear("radio_ack", "and ack received");
-		  call MilliTimer.stop();
-		} else {
-		  dbg_clear("radio_ack", "but ack was not received");
-		}
-		dbg_clear("radio_send", " at time %s \n", sim_time_string());
+		dbg("radio_send", "");
+		dbg("radio_send", "Packet sent by %d", TOS_NODE_ID);
 	    }
-	*/
-
    }
 
    //***************************** Receive interface *****************//
@@ -196,8 +191,6 @@ implementation {
 		}
 		
 	}
-	
-	dbg("radio_pack",">>>Pack \n \t Payload length %hhu \n", call Packet.payloadLength( buf ) );
 
         return buf;
 
@@ -211,8 +204,7 @@ implementation {
 	mess->msg_senderid = TOS_NODE_ID;
 	mess->msg_value = LON;
 	dbg("radio_send", "Sending packet Light1 turned ON by %d", TOS_NODE_ID);
-	if(call AMSend.send(LIGHT1, &packet, sizeof(my_msg_t)) == SUCCESS){
-		
+	if(call AMSend.send(LIGHT1, &packet, sizeof(my_msg_t)) == SUCCESS) {
 	}
    }
 
@@ -222,7 +214,7 @@ implementation {
 	mess->msg_senderid = TOS_NODE_ID;
 	mess->msg_value = LOFF;
 	dbg("radio_send", "Sending packet Light1 turned OFF by %d", TOS_NODE_ID);
-	if(call AMSend.send(LIGHT1, &packet, sizeof(my_msg_t)) == SUCCESS){
+	if(call AMSend.send(LIGHT1, &packet, sizeof(my_msg_t)) == SUCCESS) {
 	}
    }
    
@@ -232,7 +224,7 @@ implementation {
 	mess->msg_senderid = TOS_NODE_ID;
 	mess->msg_value = LON;
 	dbg("radio_send", "Sending packet Light2 turned ON by %d", TOS_NODE_ID);
-	if(call AMSend.send(LIGHT2, &packet, sizeof(my_msg_t)) == SUCCESS){
+	if(call AMSend.send(LIGHT2, &packet, sizeof(my_msg_t)) == SUCCESS) {
 	}
    }
 
@@ -242,7 +234,7 @@ implementation {
 	mess->msg_senderid = TOS_NODE_ID;
 	mess->msg_value = LOFF;
 	dbg("radio_send", "Sending packet Light2 turned OFF by %d", TOS_NODE_ID);
-	if(call AMSend.send(LIGHT2, &packet, sizeof(my_msg_t)) == SUCCESS){
+	if(call AMSend.send(LIGHT2, &packet, sizeof(my_msg_t)) == SUCCESS) {
 	}
    }
 
@@ -252,7 +244,7 @@ implementation {
 	mess->msg_senderid = TOS_NODE_ID;
 	mess->msg_value = ENTRY;
 	dbg("radio_send", "Sending packet Detected entrance by %d", TOS_NODE_ID);
-	if(call AMSend.send(CPANEL, &packet, sizeof(my_msg_t)) == SUCCESS){
+	if(call AMSend.send(CPANEL, &packet, sizeof(my_msg_t)) == SUCCESS) {
 	}
    }
 
@@ -262,7 +254,7 @@ implementation {
 	mess->msg_senderid = TOS_NODE_ID;
 	mess->msg_value = EXIT;
 	dbg("radio_send", "Sending packet Detected exit by %d", TOS_NODE_ID);
-	if(call AMSend.send(CPANEL, &packet, sizeof(my_msg_t)) == SUCCESS){
+	if(call AMSend.send(CPANEL, &packet, sizeof(my_msg_t)) == SUCCESS) {
 	}
    }   
 

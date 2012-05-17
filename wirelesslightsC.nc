@@ -45,6 +45,8 @@ implementation {
    //****************** Boot interface ************************//
    event void Boot.booted() {
 
+	dbg("radio_send", "BOOTED!!\n");
+	
      	/* Light 1. */
 	if (TOS_NODE_ID==LIGHT1) {
 		call Leds.led0Off();
@@ -64,19 +66,22 @@ implementation {
 
 	/* Control panel. */
 	if (TOS_NODE_ID==CPANEL) {
-      		call Timer1.startPeriodic(SEC5);
-		call Timer2.startPeriodic(SEC90);
+      		call Timer1.startOneShot(SEC5);
+		call Timer2.startOneShot(SEC90);
+		dbg("radio_send", "Control panel timeouts set\n");
 	}
 	
 	/* Light 1. */
 	else if (TOS_NODE_ID==LIGHT1) {
-		call Timer1.startPeriodic(SEC10);
-		call Timer2.startPeriodic(SEC30);
+		call Timer1.startOneShot(SEC10);
+		call Timer2.startOneShot(SEC30);
+		dbg("radio_send", "Light1 timeouts set\n");
 	}
 
 	/* Light 2. */
 	else if (TOS_NODE_ID==LIGHT2) {
-		call Timer1.startPeriodic(SEC60);
+		call Timer1.startOneShot(SEC60);
+		dbg("radio_send", "Light2 timeouts set\n");
 	}
 	
      }
@@ -93,16 +98,19 @@ implementation {
 
         /* Control panel. */
 	if (TOS_NODE_ID==CPANEL) {
+		dbg("radio_send", "5 seconds\n");
       		post sendL1On();
 	}
 	
 	/* Light 1. */
 	else if (TOS_NODE_ID==LIGHT1) {
+		dbg("radio_send", "10 seconds\n");
 		post sendEntry();
 	}
 
 	/* Light 2. */
 	else if (TOS_NODE_ID==LIGHT2) {
+		dbg("radio_send", "60 seconds\n");
 		post sendExit();
 	}
 
@@ -113,12 +121,14 @@ implementation {
 
         /* Control panel. */
 	if (TOS_NODE_ID==CPANEL) {
+		dbg("radio_send", "90 seconds\n");
       		post sendL1Off();
 		post sendL2Off();
 	}
 	
 	/* Light 1. */
 	else if (TOS_NODE_ID==LIGHT1) {
+		dbg("radio_send", "30 seconds\n");
 		post sendL2On();
 	}
 
@@ -133,8 +143,7 @@ implementation {
    event void AMSend.sendDone(message_t* buf,error_t err) {
 
 	    if(&packet == buf && err == SUCCESS ) {
-		dbg("radio_send", "");
-		dbg("radio_send", "Packet sent by %d", TOS_NODE_ID);
+		dbg("radio_send", "Packet sent by %d\n", TOS_NODE_ID);
 	    }
    }
 
@@ -152,14 +161,14 @@ implementation {
 		else if (mess->msg_type == INFO) {
 			if (mess->msg_value == ENTRY)
 				if (mess->msg_senderid == LIGHT1)
-					dbg("Control panel","Person entered notice by Light1");
+					dbg("control_panel","Person entered notice by Light1\n");
 				else if (mess->msg_senderid == LIGHT2)
-					dbg("Control panel","Person entered notice by Light2");
+					dbg("control_panel","Person entered notice by Light2\n");
 			else if (mess->msg_value == EXIT) {
 				if (mess->msg_senderid == LIGHT1)
-					dbg("Control panel","Person exited notice by Light1");
+					dbg("control_panel","Person exited notice by Light1\n");
 				else if (mess->msg_senderid == LIGHT2)
-					dbg("Control panel","Person exited notice by Light2");
+					dbg("control_panel","Person exited notice by Light2\n");
 			}
 		}
 	
@@ -169,8 +178,14 @@ implementation {
 	else if (TOS_NODE_ID==LIGHT1) {
 
 		if (mess->msg_type == CONTROL) {
-			if (mess->msg_value == LON) call Leds.led0On();
-			else if (mess->msg_value == LOFF) call Leds.led0Off();
+			if (mess->msg_value == LON) {
+				call Leds.led0On();
+				dbg("control_panel","Light1 turned ON by %d\n", mess->msg_senderid);
+			}
+			else if (mess->msg_value == LOFF) {
+				call Leds.led0Off();
+				dbg("control_panel","Light1 turned OFF by %d\n", mess->msg_senderid);
+			}
 		}
 		
 		else if (mess->msg_type == INFO) {
@@ -182,8 +197,14 @@ implementation {
 	else if (TOS_NODE_ID==LIGHT2) {
 
 		if (mess->msg_type == CONTROL) {
-			if (mess->msg_value == LON) call Leds.led0On();
-			else if (mess->msg_value == LOFF) call Leds.led0Off();
+			if (mess->msg_value == LON) {
+				call Leds.led0On();
+				dbg("control_panel","Light2 turned ON by %d\n", mess->msg_senderid);
+			}
+			else if (mess->msg_value == LOFF) {
+				call Leds.led0Off();
+				dbg("control_panel","Light2 turned OFF by %d\n", mess->msg_senderid);
+			}
 		}
 		
 		else if (mess->msg_type == INFO) {
@@ -202,8 +223,8 @@ implementation {
 	mess->msg_type = CONTROL;
 	mess->msg_senderid = TOS_NODE_ID;
 	mess->msg_value = LON;
-	dbg("radio_send", "Sending packet Light1 turned ON by %d", TOS_NODE_ID);
 	if(call AMSend.send(LIGHT1, &packet, sizeof(my_msg_t)) == SUCCESS) {
+		dbg("radio_send", "Sending packet Light1 turned ON by %d\n", TOS_NODE_ID);
 	}
    }
 
@@ -212,8 +233,8 @@ implementation {
 	mess->msg_type = CONTROL;
 	mess->msg_senderid = TOS_NODE_ID;
 	mess->msg_value = LOFF;
-	dbg("radio_send", "Sending packet Light1 turned OFF by %d", TOS_NODE_ID);
 	if(call AMSend.send(LIGHT1, &packet, sizeof(my_msg_t)) == SUCCESS) {
+		dbg("radio_send", "Sending packet Light1 turned OFF by %d\n", TOS_NODE_ID);
 	}
    }
    
@@ -222,8 +243,8 @@ implementation {
 	mess->msg_type = CONTROL;
 	mess->msg_senderid = TOS_NODE_ID;
 	mess->msg_value = LON;
-	dbg("radio_send", "Sending packet Light2 turned ON by %d", TOS_NODE_ID);
 	if(call AMSend.send(LIGHT2, &packet, sizeof(my_msg_t)) == SUCCESS) {
+		dbg("radio_send", "Sending packet Light2 turned ON by %d\n", TOS_NODE_ID);
 	}
    }
 
@@ -232,8 +253,8 @@ implementation {
 	mess->msg_type = CONTROL;
 	mess->msg_senderid = TOS_NODE_ID;
 	mess->msg_value = LOFF;
-	dbg("radio_send", "Sending packet Light2 turned OFF by %d", TOS_NODE_ID);
 	if(call AMSend.send(LIGHT2, &packet, sizeof(my_msg_t)) == SUCCESS) {
+		dbg("radio_send", "Sending packet Light2 turned OFF by %d\n", TOS_NODE_ID);
 	}
    }
 
@@ -242,8 +263,8 @@ implementation {
 	mess->msg_type = INFO;
 	mess->msg_senderid = TOS_NODE_ID;
 	mess->msg_value = ENTRY;
-	dbg("radio_send", "Sending packet Detected entrance by %d", TOS_NODE_ID);
 	if(call AMSend.send(CPANEL, &packet, sizeof(my_msg_t)) == SUCCESS) {
+		dbg("radio_send", "Sending packet Detected entrance by %d\n", TOS_NODE_ID);
 	}
    }
 
@@ -252,8 +273,8 @@ implementation {
 	mess->msg_type = INFO;
 	mess->msg_senderid = TOS_NODE_ID;
 	mess->msg_value = EXIT;
-	dbg("radio_send", "Sending packet Detected exit by %d", TOS_NODE_ID);
 	if(call AMSend.send(CPANEL, &packet, sizeof(my_msg_t)) == SUCCESS) {
+		dbg("radio_send", "Sending packet Detected exit by %d\n", TOS_NODE_ID);
 	}
    }   
 

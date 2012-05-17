@@ -47,12 +47,12 @@ implementation {
 
      	/* Light 1. */
 	if (TOS_NODE_ID==LIGHT1) {
-		Leds.led00ff();
+		call Leds.led0Off();
 	}
 
 	/* Light 2. */
 	if (TOS_NODE_ID==LIGHT2) {
-		Leds.led00ff();
+		call Leds.led0Off();
 	}
 
 	call AMControl.start();
@@ -64,19 +64,19 @@ implementation {
 
 	/* Control panel. */
 	if (TOS_NODE_ID==CPANEL) {
-      		call Timer1.startPeriodic(5SEC);
-		call Timer2.startPeriodic(90SEC);
+      		call Timer1.startPeriodic(SEC5);
+		call Timer2.startPeriodic(SEC90);
 	}
 	
 	/* Light 1. */
 	else if (TOS_NODE_ID==LIGHT1) {
-		call Timer1.startPeriodic(10SEC);
-		call Timer2.startPeriodic(30SEC);
+		call Timer1.startPeriodic(SEC10);
+		call Timer2.startPeriodic(SEC30);
 	}
 
 	/* Light 2. */
 	else if (TOS_NODE_ID==LIGHT2) {
-		call Timer1.startPeriodic(60SEC);
+		call Timer1.startPeriodic(SEC60);
 	}
 	
      }
@@ -141,8 +141,7 @@ implementation {
    //***************************** Receive interface *****************//
    event message_t* Receive.receive(message_t* buf,void* payload, uint8_t len) {
 
-	my_msg_t* mess=(my_msg_t*)payload;
-	rec_id = mess->msg_id;
+	my_msg_t* mess = (my_msg_t*)payload;
 
 	/* Control panel. */
 	if (TOS_NODE_ID==CPANEL) {
@@ -170,8 +169,8 @@ implementation {
 	else if (TOS_NODE_ID==LIGHT1) {
 
 		if (mess->msg_type == CONTROL) {
-			if (mess->msg_value == LON) Leds.led0On();
-			else if (mess->msg_value == LOFF) Leds.led00ff();
+			if (mess->msg_value == LON) call Leds.led0On();
+			else if (mess->msg_value == LOFF) call Leds.led0Off();
 		}
 		
 		else if (mess->msg_type == INFO) {
@@ -183,8 +182,8 @@ implementation {
 	else if (TOS_NODE_ID==LIGHT2) {
 
 		if (mess->msg_type == CONTROL) {
-			if (mess->msg_value == LON) Leds.led0On();
-			else if (mess->msg_value == LOFF) Leds.led00ff();
+			if (mess->msg_value == LON) call Leds.led0On();
+			else if (mess->msg_value == LOFF) call Leds.led0Off();
 		}
 		
 		else if (mess->msg_type == INFO) {

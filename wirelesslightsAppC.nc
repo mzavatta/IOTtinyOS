@@ -21,7 +21,7 @@ implementation {
 	/* Main, leds and timer components. */
 	components MainC, LedsC;
 	components new TimerMilliC() as Timer1;
-	components new TimerMilliC() as TImer2;
+	components new TimerMilliC() as Timer2;
 
 	/* Message passing components. */
 	components new AMSenderC(AM_MY_MSG);

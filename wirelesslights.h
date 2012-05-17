@@ -5,31 +5,37 @@
  * @brief IOT homework TinyOS: header file
  */
 
-typedef nx_struct my_msg_t {
-	nx_uint8_t msg_type;
-	nx_uint8_t msg_senderid;
-	nx_uint8_t msg_value;
-} my_msg_t;
+#ifndef WIRELESSLIGHTS_H
 
-#define CONTROL (1)
-#define INFO 	(2)
+	#define WIRELESSLIGHTS_H
 
-#define	LON 	(1)
-#define LOFF	(2)
+	typedef nx_struct my_msg {
+		nx_uint8_t msg_type;
+		nx_uint8_t msg_senderid;
+		nx_uint8_t msg_value;
+	} my_msg_t;
 
-#define ENTRY	(1)
-#define EXIT	(2)
+	#define CONTROL (1)
+	#define INFO 	(2)
 
-#define CPANEL	(1)
-#define LIGHT1	(2)
-#define LIGHT2	(3)
+	#define	LON 	(1)
+	#define LOFF	(2)
 
-#define 5SEC	(5000)
-#define 10SEC	(10000)
-#define 30SEC	(30000)
-#define 60SEC	(60000)
-#define 90SEC	(90000)
+	#define ENTRY	(1)
+	#define EXIT	(2)
 
-enum{
-AM_MY_MSG = 6,
-};
+	#define CPANEL	(1)
+	#define LIGHT1	(2)
+	#define LIGHT2	(3)
+
+	#define SEC5	(5000)
+	#define SEC10	(10000)
+	#define SEC30	(30000)
+	#define SEC60	(60000)
+	#define SEC90	(90000)
+
+	enum {
+		AM_MY_MSG = 6,
+	};
+
+#endif
